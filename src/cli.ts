@@ -11,10 +11,19 @@ FoldIt CLI - A comprehensive package for maintaining a clean folder structure.
 Usage: foldit <command> [options]
 
 Commands:
-  generate-page <name>    Generate a new Next.js page scaffold
-  --version, -v          Show version
-  --help, -h             Show this help message
+  generate-page <name> [flags]    Generate a new Next.js page scaffold
+    -c, --component              Include a components folder
+    -t, --test                   Include a test folder with test file
 
+Global Options:
+  --version, -v                  Show version
+  --help, -h                     Show this help message
+
+Examples:
+  foldit generate-page about
+  foldit generate-page user-profile -c
+  foldit generate-page blog -t
+  foldit generate-page dashboard -c -t
 `);
 }
 
@@ -36,12 +45,21 @@ async function main() {
     case "generate-page":
       if (args.length < 2) {
         console.error("Error: Page name is required");
-        console.log("Usage: foldit generate-page <name>");
+        console.log("Usage: foldit generate-page <name> [flags]");
         process.exit(1);
       }
+
       const pageName = args[1];
+      const flags = args.slice(2);
+
+      // Parse flags
+      const options = {
+        withComponent: flags.includes("-c") || flags.includes("--component"),
+        withTest: flags.includes("-t") || flags.includes("--test"),
+      };
+
       try {
-        await generatePage(pageName);
+        await generatePage(pageName, options);
       } catch (error) {
         console.error("Error:", error);
         process.exit(1);

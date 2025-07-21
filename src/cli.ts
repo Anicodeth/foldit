@@ -14,6 +14,8 @@ Commands:
   generate-page <name> [flags]    Generate a new Next.js page scaffold
     -c, --component              Include a components folder
     -t, --test                   Include a test folder with test file
+    -d, --dynamic <segment>      Create a dynamic route with the specified segment name
+    --catch-all                  Create a catch-all dynamic route (use with -d)
 
 Global Options:
   --version, -v                  Show version
@@ -24,6 +26,8 @@ Examples:
   foldit generate-page user-profile -c
   foldit generate-page blog -t
   foldit generate-page dashboard -c -t
+  foldit generate-page blog -d slug -t
+  foldit generate-page shop -d slug --catch-all -t
 `);
 }
 
@@ -53,10 +57,19 @@ async function main() {
       const flags = args.slice(2);
 
       // Parse flags
-      const options = {
+      const options: any = {
         withComponent: flags.includes("-c") || flags.includes("--component"),
         withTest: flags.includes("-t") || flags.includes("--test"),
+        catchAll: flags.includes("--catch-all"),
       };
+
+      // Parse dynamic route segment
+      const dynamicIndex = flags.findIndex(
+        (flag) => flag === "-d" || flag === "--dynamic"
+      );
+      if (dynamicIndex !== -1 && dynamicIndex + 1 < flags.length) {
+        options.dynamic = flags[dynamicIndex + 1];
+      }
 
       try {
         await generatePage(pageName, options);

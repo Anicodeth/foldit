@@ -2,12 +2,20 @@
 import * as path from "path";
 import { existsSync } from "fs";
 import { promises as fs } from "fs";
-import { generateNextPageTemplate } from "../templates/nextPageTemplate";
-import { generateNextPageTestTemplate } from "../templates/nextPageTestTemplate";
+import {
+  generateNextPageTemplate,
+  generateDynamicRouteTemplate,
+} from "../templates/nextPageTemplate";
+import {
+  generateNextPageTestTemplate,
+  generateDynamicRouteTestTemplate,
+} from "../templates/nextPageTestTemplate";
 
 interface GeneratePageOptions {
   withComponent?: boolean;
   withTest?: boolean;
+  dynamic?: string; // Dynamic segment name (e.g., "id", "slug")
+  catchAll?: boolean; // Whether this is a catch-all segment
 }
 
 /**
@@ -36,12 +44,25 @@ async function generateComponentFolder(cwd: string, pageName: string) {
 /**
  * Generates a test folder structure for a page
  */
-async function generateTestFolder(pageDir: string, pageName: string) {
+async function generateTestFolder(
+  pageDir: string,
+  pageName: string,
+  options: GeneratePageOptions = {}
+) {
   const testDir = path.join(pageDir, "__tests__");
   await fs.mkdir(testDir, { recursive: true });
 
-  // Create a test file for the page using the template function
-  const testContent = generateNextPageTestTemplate(pageName);
+  // Create a test file for the page using the appropriate template function
+  let testContent: string;
+  if (options.dynamic) {
+    testContent = generateDynamicRouteTestTemplate(
+      pageName,
+      options.dynamic,
+      options.catchAll
+    );
+  } else {
+    testContent = generateNextPageTestTemplate(pageName);
+  }
 
   await fs.writeFile(path.join(testDir, "page.test.tsx"), testContent);
   console.log(`Created test folder: ${testDir}`);
@@ -57,7 +78,17 @@ export async function generatePage(
   options: GeneratePageOptions = {}
 ) {
   const cwd = process.cwd();
-  const pageDir = path.join(cwd, `src/app/${name}`);
+
+  // Handle dynamic routes
+  let pageDir: string;
+  if (options.dynamic) {
+    const dynamicSegment = options.catchAll
+      ? `[...${options.dynamic}]`
+      : `[${options.dynamic}]`;
+    pageDir = path.join(cwd, `src/app/${name}/${dynamicSegment}`);
+  } else {
+    pageDir = path.join(cwd, `src/app/${name}`);
+  }
 
   // Extract the page name for template generation (last part of the path)
   const pageName = extractPageName(name);
@@ -72,8 +103,17 @@ export async function generatePage(
   const pageFile = path.join(pageDir, "page.tsx");
 
   try {
-    // Generate the page content using the template function with the extracted page name
-    const pageContent = generateNextPageTemplate(pageName);
+    // Generate the page content using the appropriate template function
+    let pageContent: string;
+    if (options.dynamic) {
+      pageContent = generateDynamicRouteTemplate(
+        pageName,
+        options.dynamic,
+        options.catchAll
+      );
+    } else {
+      pageContent = generateNextPageTemplate(pageName);
+    }
 
     // Write the generated content to the file
     await fs.writeFile(pageFile, pageContent, { flag: "wx" });
@@ -87,7 +127,7 @@ export async function generatePage(
 
     // Generate test folder if requested
     if (options.withTest) {
-      await generateTestFolder(pageDir, pageName);
+      await generateTestFolder(pageDir, pageName, options);
     }
 
     console.log(`Page '${name}' scaffold created!`);

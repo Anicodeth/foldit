@@ -344,5 +344,121 @@ describe("generatePage", () => {
       expect(testContent).toContain("import Page1 from '../page'");
       expect(testContent).toContain("describe('Page1 Page'");
     });
+
+    it("should handle subfolder type names", async () => {
+      await generatePage("cars/car", { withTest: true });
+
+      // Check that the full directory structure is created
+      expect(mockMkdir).toHaveBeenCalledWith("/mock/cwd/src/app/cars/car", {
+        recursive: true,
+      });
+
+      // Check that the page file is created in the correct location
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/cars/car/page.tsx",
+        expect.any(String),
+        { flag: "wx" }
+      );
+
+      // Check that the test folder is created in the correct location
+      expect(mockMkdir).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/cars/car/__tests__",
+        {
+          recursive: true,
+        }
+      );
+
+      // Check that the test file uses the extracted page name (last part of path)
+      const testFileCall = mockWriteFile.mock.calls.find(
+        (call: any) =>
+          call[0] === "/mock/cwd/src/app/cars/car/__tests__/page.test.tsx"
+      );
+
+      expect(testFileCall).toBeDefined();
+      const testContent = testFileCall![1] as string;
+
+      expect(testContent).toContain("import Car from '../page'");
+      expect(testContent).toContain("describe('Car Page'");
+    });
+
+    it("should handle nested subfolder type names", async () => {
+      await generatePage("admin/users/profile", {
+        withComponent: true,
+        withTest: true,
+      });
+
+      // Check that the full directory structure is created
+      expect(mockMkdir).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/admin/users/profile",
+        {
+          recursive: true,
+        }
+      );
+
+      // Check that the page file is created in the correct location
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/admin/users/profile/page.tsx",
+        expect.any(String),
+        { flag: "wx" }
+      );
+
+      // Check that component folder is created with correct page name
+      expect(mockMkdir).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/admin/users/profile/components",
+        {
+          recursive: true,
+        }
+      );
+
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/admin/users/profile/components/index.ts",
+        expect.stringContaining("// Components for profile page")
+      );
+
+      // Check that test folder is created with correct page name
+      expect(mockMkdir).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/admin/users/profile/__tests__",
+        {
+          recursive: true,
+        }
+      );
+
+      const testFileCall = mockWriteFile.mock.calls.find(
+        (call: any) =>
+          call[0] ===
+          "/mock/cwd/src/app/admin/users/profile/__tests__/page.test.tsx"
+      );
+
+      expect(testFileCall).toBeDefined();
+      const testContent = testFileCall![1] as string;
+
+      expect(testContent).toContain("import Profile from '../page'");
+      expect(testContent).toContain("describe('Profile Page'");
+    });
+
+    it("should handle subfolder names with special characters", async () => {
+      await generatePage("blog/posts/my-post", { withTest: true });
+
+      // Check that the full directory structure is created
+      expect(mockMkdir).toHaveBeenCalledWith(
+        "/mock/cwd/src/app/blog/posts/my-post",
+        {
+          recursive: true,
+        }
+      );
+
+      // Check that the test file uses the extracted page name
+      const testFileCall = mockWriteFile.mock.calls.find(
+        (call: any) =>
+          call[0] ===
+          "/mock/cwd/src/app/blog/posts/my-post/__tests__/page.test.tsx"
+      );
+
+      expect(testFileCall).toBeDefined();
+      const testContent = testFileCall![1] as string;
+
+      expect(testContent).toContain("import My-post from '../page'");
+      expect(testContent).toContain("describe('My-post Page'");
+    });
   });
 });

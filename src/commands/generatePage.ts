@@ -11,10 +11,17 @@ interface GeneratePageOptions {
 }
 
 /**
+ * Extracts the page name from a path (e.g., "cars/car" -> "car")
+ */
+function extractPageName(name: string): string {
+  return name.split("/").pop() || name;
+}
+
+/**
  * Generates a component folder structure for a page
  */
-async function generateComponentFolder(pageDir: string, pageName: string) {
-  const componentDir = path.join(pageDir, "components");
+async function generateComponentFolder(cwd: string, pageName: string) {
+  const componentDir = path.join(cwd, `src/components/${pageName}`);
   await fs.mkdir(componentDir, { recursive: true });
 
   // Create an index file for the components
@@ -42,7 +49,7 @@ async function generateTestFolder(pageDir: string, pageName: string) {
 
 /**
  * Generates a new Next.js page scaffold.
- * @param name Name of the page (e.g., "about" for app/about)
+ * @param name Name of the page (e.g., "about" for app/about, or "cars/car" for app/cars/car)
  * @param options Options for additional features
  */
 export async function generatePage(
@@ -51,6 +58,9 @@ export async function generatePage(
 ) {
   const cwd = process.cwd();
   const pageDir = path.join(cwd, `src/app/${name}`);
+
+  // Extract the page name for template generation (last part of the path)
+  const pageName = extractPageName(name);
 
   if (existsSync(pageDir)) {
     console.error(`Page '${name}' already exists at ${pageDir}`);
@@ -62,8 +72,8 @@ export async function generatePage(
   const pageFile = path.join(pageDir, "page.tsx");
 
   try {
-    // Generate the page content using the template function
-    const pageContent = generateNextPageTemplate(name);
+    // Generate the page content using the template function with the extracted page name
+    const pageContent = generateNextPageTemplate(pageName);
 
     // Write the generated content to the file
     await fs.writeFile(pageFile, pageContent, { flag: "wx" });
@@ -72,12 +82,12 @@ export async function generatePage(
 
     // Generate component folder if requested
     if (options.withComponent) {
-      await generateComponentFolder(pageDir, name);
+      await generateComponentFolder(cwd, pageName);
     }
 
     // Generate test folder if requested
     if (options.withTest) {
-      await generateTestFolder(pageDir, name);
+      await generateTestFolder(pageDir, pageName);
     }
 
     console.log(`Page '${name}' scaffold created!`);

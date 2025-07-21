@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { generatePage } from "./commands/generatePage";
+import { generateStructure } from "./commands/generateStructure";
 
 const VERSION = "1.0.0";
 
@@ -11,6 +12,10 @@ FoldIt CLI - A comprehensive package for maintaining a clean folder structure.
 Usage: foldit <command> [options]
 
 Commands:
+  generate-structure [flags]      Generate a Next.js project folder structure
+    --basic                      Generate basic folder structure
+    --medium                     Generate medium folder structure
+
   generate-page <name> [flags]    Generate a new Next.js page scaffold
     -c, --component              Include a components folder
     -t, --test                   Include a test folder with test file
@@ -28,6 +33,8 @@ Examples:
   foldit generate-page dashboard -c -t
   foldit generate-page blog -d slug -t
   foldit generate-page shop -d slug --catch-all -t
+  foldit generate-structure --basic
+  foldit generate-structure --medium
 `);
 }
 
@@ -73,6 +80,33 @@ async function main() {
 
       try {
         await generatePage(pageName, options);
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+      break;
+
+    case "generate-structure":
+      const structureFlags = args.slice(1);
+
+      // Parse structure type
+      let structureType: "basic" | "medium" | null = null;
+      if (structureFlags.includes("--basic")) {
+        structureType = "basic";
+      } else if (structureFlags.includes("--medium")) {
+        structureType = "medium";
+      }
+
+      if (!structureType) {
+        console.error("Error: Structure type is required");
+        console.log(
+          "Usage: foldit generate-structure --basic OR foldit generate-structure --medium"
+        );
+        process.exit(1);
+      }
+
+      try {
+        await generateStructure({ type: structureType });
       } catch (error) {
         console.error("Error:", error);
         process.exit(1);

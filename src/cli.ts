@@ -2,6 +2,7 @@
 
 import { generatePage } from "./commands/generatePage";
 import { generateStructure } from "./commands/generateStructure";
+import { generateApi } from "./commands/generateApi";
 
 const VERSION = "1.0.0";
 
@@ -22,6 +23,13 @@ Commands:
     -d, --dynamic <segment>      Create a dynamic route with the specified segment name
     --catch-all                  Create a catch-all dynamic route (use with -d)
 
+  generate-api <name> [flags]     Generate a new Next.js API route scaffold
+    --methods <list>             Comma-separated HTTP methods (default: GET,POST)
+    --auth                       Include authentication middleware
+    --prisma                     Include Prisma database integration
+    -d, --dynamic <param>        Create dynamic route with parameter
+    --catch-all, -c              Use catch-all dynamic route (with -d)
+
 Global Options:
   --version, -v                  Show version
   --help, -h                     Show this help message
@@ -35,6 +43,12 @@ Examples:
   foldit generate-page shop -d slug --catch-all -t
   foldit generate-structure --basic
   foldit generate-structure --medium
+  foldit generate-api user
+  foldit generate-api posts --methods GET,POST,PUT,DELETE
+  foldit generate-api auth --auth --methods POST
+  foldit generate-api products --prisma --methods GET,POST
+  foldit generate-api user -d id --auth --prisma
+  foldit generate-api files -d path --catch-all --methods GET,POST
 `);
 }
 
@@ -107,6 +121,47 @@ async function main() {
 
       try {
         await generateStructure({ type: structureType });
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+      break;
+
+    case "generate-api":
+      if (args.length < 2) {
+        console.error("Error: API route name is required");
+        console.log("Usage: foldit generate-api <name> [flags]");
+        process.exit(1);
+      }
+
+      const apiName = args[1];
+      const apiFlags = args.slice(2);
+
+      // Parse API flags
+      const apiOptions: any = {
+        auth: apiFlags.includes("--auth"),
+        prisma: apiFlags.includes("--prisma"),
+        catchAll: apiFlags.includes("--catch-all") || apiFlags.includes("-c"),
+      };
+
+      // Parse methods
+      const methodsIndex = apiFlags.findIndex((flag) => flag === "--methods");
+      if (methodsIndex !== -1 && methodsIndex + 1 < apiFlags.length) {
+        apiOptions.methods = apiFlags[methodsIndex + 1]
+          .split(",")
+          .map((m) => m.trim().toUpperCase());
+      }
+
+      // Parse dynamic route parameter
+      const apiDynamicIndex = apiFlags.findIndex(
+        (flag) => flag === "-d" || flag === "--dynamic"
+      );
+      if (apiDynamicIndex !== -1 && apiDynamicIndex + 1 < apiFlags.length) {
+        apiOptions.dynamic = apiFlags[apiDynamicIndex + 1];
+      }
+
+      try {
+        await generateApi(apiName, apiOptions);
       } catch (error) {
         console.error("Error:", error);
         process.exit(1);

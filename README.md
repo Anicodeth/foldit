@@ -12,6 +12,10 @@ A powerful command-line tool for generating Next.js project structures, pages, A
 - **🔗 Dynamic Routes**: Support for dynamic and catch-all route generation
 - **🌐 API Route Generation**: Create API routes with authentication, Prisma integration, and HTTP methods
 - **🔧 Service Generation**: Generate axios-based service files for API calls with advanced features
+- **🗄️ Database Integration**: Prisma ORM setup with multiple database providers
+- **🔐 Authentication**: NextAuth.js and Better Auth integration with multiple providers
+- **🎨 UI Components**: shadcn/ui setup with Tailwind CSS and component generation
+- **📝 Code Quality**: ESLint and Prettier configuration with strict rules
 - **🐳 Docker Integration**: Generate Docker configurations for development and production
 - **☸️ Kubernetes Support**: Create Kubernetes manifests for deployment
 - **🧪 Test Integration**: Built-in test file generation with Jest and React Testing Library
@@ -351,6 +355,75 @@ foldit generate-api <name> [flags]
 - `-d, --dynamic <param>`: Create dynamic route with parameter
 - `--catch-all, -c`: Use catch-all dynamic route (with -d)
 
+### Integrate Prisma
+
+```bash
+foldit integrate prisma [flags]
+```
+
+**Flags:**
+
+- `--db <provider>`: Sets DB provider (sqlite, postgresql, mysql, sqlserver, mongodb)
+- `--push`: Runs prisma db push after setup
+- `--generate`: Runs prisma generate after setup
+- `--with-seed`: Adds prisma/seed.ts with basic seeding logic
+- `--schema <path>`: Custom path to schema.prisma (default: prisma/schema.prisma)
+
+### Integrate NextAuth.js
+
+```bash
+foldit integrate next-auth [flags]
+```
+
+**Flags:**
+
+- `--provider <name>`: Adds provider (e.g., github, google, credentials)
+- `--prisma`: Uses Prisma adapter + adds session models
+- `--session <jwt/database>`: Sets session strategy
+- `--env`: Injects needed .env keys for provider setup
+- `--route`: Scaffolds app/api/auth/[...nextauth]/route.ts
+
+### Integrate Better Auth
+
+```bash
+foldit integrate better-auth [flags]
+```
+
+**Flags:**
+
+- `--provider <name>`: Adds provider (e.g., github, google, credentials)
+- `--prisma`: Uses Prisma adapter + adds session models
+- `--session <jwt/database>`: Sets session strategy
+- `--env`: Injects needed .env keys for provider setup
+- `--route`: Scaffolds app/api/auth/route.ts
+
+### Integrate ESLint + Prettier
+
+```bash
+foldit integrate eslint-prettier [flags]
+```
+
+**Flags:**
+
+- `--strict`: Enables strict mode (no-any, no-unused-vars, etc.)
+- `--airbnb`: Adds Airbnb ESLint config
+- `--typescript`: Adds @typescript-eslint plugin and rules
+- `--with-scripts`: Adds lint and format scripts in package.json
+- `--ignore <file>`: Adds to .eslintignore or .prettierignore
+
+### Integrate shadcn/ui
+
+```bash
+foldit integrate shadcn/ui [flags]
+```
+
+**Flags:**
+
+- `--components <list>`: Scaffolds specific components (e.g. button,input,dialog)
+- `--theme <name>`: Applies a theme (default: zinc)
+- `--dir <path>`: Custom path to generate components (components/ui by default)
+- `--tailwind`: Automatically installs Tailwind CSS if missing
+
 ### Generate Service
 
 ```bash
@@ -460,9 +533,47 @@ foldit generate-api posts --prisma --methods GET,POST,PUT,DELETE
 foldit generate-api posts -d id --prisma --methods GET,PUT,DELETE
 foldit generate-api auth --auth --methods POST
 
+# Generate services
+foldit generate-service posts --with-types --with-cache
+foldit generate-service auth --with-auth --with-interceptors
+
+# Integrate database and auth
+foldit integrate prisma --db postgresql --with-seed --push --generate
+foldit integrate next-auth --provider github --prisma --env --route --session database
+
+# Add code quality tools
+foldit integrate eslint-prettier --strict --typescript --with-scripts --airbnb
+foldit integrate shadcn/ui --components button,input,dialog --theme zinc --tailwind
+
 # Containerize and deploy
 foldit dockerize --with-compose
 foldit add-kube --with-ingress --replicas 2
+```
+
+### E-commerce Application
+
+```bash
+# Generate structure and pages
+foldit generate-structure --next
+foldit generate-page products -c -t
+foldit generate-page products -d slug -c -t
+foldit generate-page cart -c -t
+foldit generate-page checkout -c -t
+
+# Generate APIs
+foldit generate-api products --prisma --methods GET,POST,PUT,DELETE
+foldit generate-api orders --auth --prisma --methods GET,POST
+foldit generate-api payments --auth --methods POST
+
+# Generate services
+foldit generate-service products --with-types --with-cache --with-retry
+foldit generate-service orders --with-auth --with-interceptors
+
+# Integrate tools
+foldit integrate prisma --db mysql --with-seed
+foldit integrate better-auth --provider credentials --prisma --env --route
+foldit integrate eslint-prettier --strict --typescript --with-scripts
+foldit integrate shadcn/ui --components button,input,card --theme slate
 ```
 
 ## 🔧 Configuration
@@ -494,6 +605,43 @@ The tool automatically detects your project structure and creates files in the a
 - **Retry logic** with exponential backoff
 - **Request/response interceptors** for logging and auth
 - **TypeScript types** generation for type safety
+
+## 🗄️ Database Integration Features
+
+- **Prisma ORM** setup with multiple database providers
+- **Database providers**: SQLite, PostgreSQL, MySQL, SQL Server, MongoDB
+- **Schema generation** with custom paths
+- **Database seeding** with sample data
+- **Migration support** with push and generate commands
+- **Type-safe queries** with generated Prisma client
+
+## 🔐 Authentication Features
+
+- **NextAuth.js integration** for App Router
+- **Better Auth integration** for modern authentication
+- **Multiple providers**: GitHub, Google, Credentials, and more
+- **Session strategies**: JWT and database sessions
+- **Prisma adapter** for database-backed sessions
+- **Environment variables** setup for providers
+- **API route scaffolding** for auth endpoints
+
+## 🎨 UI Component Features
+
+- **shadcn/ui setup** with Tailwind CSS
+- **Component generation** with custom themes
+- **Multiple themes**: zinc, slate, gray, and more
+- **Custom directories** for component placement
+- **Tailwind CSS** automatic installation
+- **Radix UI primitives** for accessible components
+
+## 📝 Code Quality Features
+
+- **ESLint configuration** with strict rules
+- **Prettier formatting** for consistent code style
+- **Airbnb config** for industry standards
+- **TypeScript support** with @typescript-eslint
+- **Package.json scripts** for linting and formatting
+- **Ignore files** for .eslintignore and .prettierignore
 
 ## ☸️ Kubernetes Features
 

@@ -1,9 +1,6 @@
 # FoldIt CLI
 
-A powerful command-line tool for generating Next.js project structures, pages, API routes, Docker configurations, and Kubernetes manifests with best practices and modern conventions.
-
-[![npm version](https://badge.fury.io/js/fold-it.svg)](https://badge.fury.io/js/fold-it)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A powerful command-line tool for generating Next.js project structures, pages, API routes, Docker configurations, Kubernetes manifests and integration templates with best practices and modern conventions.
 
 ## 🚀 Features
 

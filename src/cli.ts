@@ -12,7 +12,7 @@ import { dockerize } from "./commands/dockerize";
 import { addKube } from "./commands/addKube";
 import { generateService } from "./commands/generateService";
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.4";
 
 function showHelp() {
   console.log(`

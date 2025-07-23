@@ -2,10 +2,21 @@
 import * as path from "path";
 import { existsSync } from "fs";
 import { promises as fs } from "fs";
-import { getStructureConfig } from "../templates/structureTemplate";
+import {
+  getStructureConfig,
+  generateDirectoryStructure,
+  StructureConfig,
+  DirectoryStructure,
+} from "../templates/structureTemplate";
 
 interface GenerateStructureOptions {
-  type: "basic" | "medium";
+  type?: "next" | "react" | "node";
+  features?: string[];
+  database?: string;
+  auth?: string;
+  styling?: string;
+  testing?: boolean;
+  linting?: boolean;
 }
 
 /**
@@ -18,11 +29,34 @@ async function createDirectoryWithGitkeep(dirPath: string): Promise<void> {
 }
 
 /**
- * Generates a Next.js project folder structure.
- * @param options Options for the structure type
+ * Recursively creates directory structure and files
+ */
+async function createStructureRecursive(
+  structure: DirectoryStructure,
+  basePath: string
+): Promise<void> {
+  for (const [name, item] of Object.entries(structure)) {
+    const fullPath = path.join(basePath, name);
+
+    if (item.type === "directory") {
+      await createDirectoryWithGitkeep(fullPath);
+
+      if (item.children) {
+        await createStructureRecursive(item.children, fullPath);
+      }
+    } else if (item.type === "file" && item.content) {
+      await fs.writeFile(fullPath, item.content, { flag: "wx" });
+      console.log(`Created file: ${fullPath}`);
+    }
+  }
+}
+
+/**
+ * Generates a project folder structure.
+ * @param options Options for the structure configuration
  */
 export async function generateStructure(
-  options: GenerateStructureOptions
+  options: GenerateStructureOptions = {}
 ): Promise<void> {
   const cwd = process.cwd();
 
@@ -35,21 +69,31 @@ export async function generateStructure(
   }
 
   try {
-    const structureConfig = getStructureConfig(options.type);
+    const structureConfig = getStructureConfig(options);
+    const directoryStructure = generateDirectoryStructure(structureConfig);
 
-    // Create all directories
-    for (const dir of structureConfig.directories) {
-      await createDirectoryWithGitkeep(path.join(cwd, dir));
-    }
+    console.log(`🔧 Generating ${structureConfig.type} project structure...`);
+
+    // Create the directory structure
+    await createStructureRecursive(directoryStructure, cwd);
 
     console.log(
-      `✅ ${
-        options.type.charAt(0).toUpperCase() + options.type.slice(1)
-      } folder structure created successfully!`
+      `✅ ${structureConfig.type} folder structure created successfully!`
     );
-    console.log(`\n📁 Generated ${options.type} folder structure:`);
-    console.log("   All directories include .gitkeep files for git tracking");
-    console.log(`\n📋 ${structureConfig.description}`);
+    console.log(`\n📁 Generated ${structureConfig.type} project structure:`);
+    console.log(`   Type: ${structureConfig.type}`);
+    console.log(`   Features: ${structureConfig.features.join(", ")}`);
+    if (structureConfig.database) {
+      console.log(`   Database: ${structureConfig.database}`);
+    }
+    if (structureConfig.auth) {
+      console.log(`   Auth: ${structureConfig.auth}`);
+    }
+    if (structureConfig.styling) {
+      console.log(`   Styling: ${structureConfig.styling}`);
+    }
+    console.log(`   Testing: ${structureConfig.testing ? "Yes" : "No"}`);
+    console.log(`   Linting: ${structureConfig.linting ? "Yes" : "No"}`);
   } catch (err: any) {
     console.error("Error generating folder structure:", err.message);
     process.exit(1);

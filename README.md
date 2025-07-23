@@ -1,6 +1,6 @@
 # FoldIt CLI
 
-A powerful command-line tool for generating Next.js project structures, pages, and API routes with best practices and modern conventions.
+A powerful command-line tool for generating Next.js project structures, pages, API routes, Docker configurations, and Kubernetes manifests with best practices and modern conventions.
 
 [![npm version](https://badge.fury.io/js/fold-it.svg)](https://badge.fury.io/js/fold-it)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -11,6 +11,9 @@ A powerful command-line tool for generating Next.js project structures, pages, a
 - **📄 Page Generation**: Generate Next.js pages with optional components and tests
 - **🔗 Dynamic Routes**: Support for dynamic and catch-all route generation
 - **🌐 API Route Generation**: Create API routes with authentication, Prisma integration, and HTTP methods
+- **🔧 Service Generation**: Generate axios-based service files for API calls with advanced features
+- **🐳 Docker Integration**: Generate Docker configurations for development and production
+- **☸️ Kubernetes Support**: Create Kubernetes manifests for deployment
 - **🧪 Test Integration**: Built-in test file generation with Jest and React Testing Library
 - **⚡ TypeScript Support**: Full TypeScript support with proper type definitions
 
@@ -33,37 +36,29 @@ npx fold-it <command>
 Create organized folder structures for your Next.js projects:
 
 ```bash
-# Basic structure (app, components, lib, types, styles)
-foldit generate-structure --basic
+# Next.js structure (app router, components, lib, types)
+foldit generate-structure --next
 
-# Medium structure (includes hooks, services)
-foldit generate-structure --medium
+# React structure (pages router, components, hooks)
+foldit generate-structure --react
+
+# Node.js structure (server-side focused)
+foldit generate-structure --node
 ```
 
-**Basic Structure:**
-
-```
-src/
-├── app/                    # Entry point for routing
-│   ├── api/                # Serverless API routes
-├── components/             # Reusable UI components
-├── lib/                    # Utility functions and DB clients
-├── types/                  # Global TS types/interfaces
-└── styles/                 # Global and modular CSS
-```
-
-**Medium Structure:**
+**Next.js Structure:**
 
 ```
 src/
-├── app/                    # Entry point for routing
-│   ├── api/                # Serverless API routes
+├── app/                    # App Router entry point
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   ├── globals.css        # Global styles
+│   └── api/               # API routes
 ├── components/             # Reusable UI components
-├── hooks/                  # Custom React hooks
+│   └── ui/                # shadcn/ui components
 ├── lib/                    # Utility functions and DB clients
-├── services/               # Service layer (API abstractions)
-├── types/                  # Global TS types/interfaces
-└── styles/                 # Global and modular CSS
+└── types/                  # Global TS types/interfaces
 ```
 
 ### Generate Pages
@@ -118,6 +113,80 @@ export default function Blog() {
     </div>
   );
 }
+```
+
+### Generate Services
+
+Create axios-based service files for API calls with advanced features:
+
+```bash
+# Basic service
+foldit generate-service user
+
+# With TypeScript types
+foldit generate-service posts --with-types
+
+# With authentication and caching
+foldit generate-service products --with-auth --with-cache
+
+# With interceptors and retry logic
+foldit generate-service orders --with-interceptors --with-retry
+
+# Custom base URL
+foldit generate-service api --base-url https://api.example.com --with-types
+```
+
+**Generated Service Example:**
+
+```typescript
+import axios from "axios";
+import { apiClient } from "./axiosConfig";
+import {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  UserListResponse,
+  UserResponse,
+  ApiError,
+} from "./userTypes";
+
+export class UserService {
+  private baseUrl =
+    "process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'/user";
+
+  /**
+   * Get all users with pagination
+   */
+  async getAll(params?: { page?: number; limit?: number; search?: string }) {
+    try {
+      const response = await apiClient.get<UserListResponse>(this.baseUrl, {
+        params,
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Get a single user by ID
+   */
+  async getById(id: string) {
+    try {
+      const response = await apiClient.get<UserResponse>(
+        `\${this.baseUrl}/\${id}`
+      );
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // ... more methods
+}
+
+// Export singleton instance
+export const userService = new UserService();
 ```
 
 ### Generate API Routes
@@ -181,6 +250,61 @@ export async function get(request: NextRequest) {
 }
 ```
 
+### Dockerize Your Application
+
+Generate Docker configurations for your Next.js application:
+
+```bash
+# Basic Docker setup
+foldit dockerize
+
+# With Docker Compose
+foldit dockerize --with-compose
+
+# Production-optimized setup
+foldit dockerize --production --with-compose
+
+# Custom Node.js version and port
+foldit dockerize --node-version 20-alpine --port 8080
+
+# Without .dockerignore
+foldit dockerize --no-ignore
+```
+
+**Generated Files:**
+
+- `Dockerfile` - Multi-stage build for development and production
+- `.dockerignore` - Excludes unnecessary files from build context
+- `docker-compose.yml` - Local development with Docker Compose (optional)
+
+### Add Kubernetes Configuration
+
+Generate Kubernetes manifests for deployment:
+
+```bash
+# Basic Kubernetes setup
+foldit add-kube
+
+# With Ingress and ConfigMap
+foldit add-kube --with-ingress --with-configmap
+
+# Custom namespace and replicas
+foldit add-kube --namespace production --replicas 3
+
+# LoadBalancer service type
+foldit add-kube --service-type LoadBalancer
+
+# Custom image name and tag
+foldit add-kube --image-name my-app --image-tag v1.0.0
+```
+
+**Generated Files:**
+
+- `k8s/deployment.yaml` - Kubernetes deployment with health checks
+- `k8s/service.yaml` - Service configuration
+- `k8s/ingress.yaml` - Ingress with SSL (optional)
+- `k8s/configmap.yaml` - Environment variables (optional)
+
 ## 📋 Command Reference
 
 ### Global Options
@@ -196,8 +320,9 @@ foldit generate-structure [flags]
 
 **Flags:**
 
-- `--basic`: Generate basic folder structure
-- `--medium`: Generate medium folder structure
+- `--next`: Generate Next.js App Router structure
+- `--react`: Generate React Pages Router structure
+- `--node`: Generate Node.js server structure
 
 ### Generate Page
 
@@ -226,13 +351,60 @@ foldit generate-api <name> [flags]
 - `-d, --dynamic <param>`: Create dynamic route with parameter
 - `--catch-all, -c`: Use catch-all dynamic route (with -d)
 
+### Generate Service
+
+```bash
+foldit generate-service <name> [flags]
+```
+
+**Flags:**
+
+- `--base-url <url>`: Custom base URL for the service
+- `--with-types`: Generate TypeScript types file
+- `--with-interceptors`: Include axios interceptors
+- `--with-error-handling`: Include comprehensive error handling
+- `--with-auth`: Include authentication support
+- `--with-retry`: Include retry logic with exponential backoff
+- `--with-cache`: Include caching functionality
+
+### Dockerize
+
+```bash
+foldit dockerize [flags]
+```
+
+**Flags:**
+
+- `--node-version <version>`: Node.js version (default: 18-alpine)
+- `--port <number>`: Port number (default: 3000)
+- `--with-compose`: Generate docker-compose.yml
+- `--with-ignore`: Generate .dockerignore (default: true)
+- `--production`: Generate production-optimized Dockerfile
+
+### Add Kubernetes
+
+```bash
+foldit add-kube [flags]
+```
+
+**Flags:**
+
+- `--namespace <name>`: Kubernetes namespace (default: default)
+- `--replicas <number>`: Number of replicas (default: 2)
+- `--port <number>`: Port number (default: 3000)
+- `--with-ingress`: Generate ingress.yaml
+- `--with-configmap`: Generate configmap.yaml
+- `--image-name <name>`: Docker image name (default: nextjs-app)
+- `--image-tag <tag>`: Docker image tag (default: latest)
+- `--service-type <type>`: Service type: ClusterIP, NodePort, LoadBalancer (default: ClusterIP)
+
 ## 🎯 Examples
 
 ### Complete Project Setup
 
 ```bash
 # 1. Generate project structure
-foldit generate-structure --medium
+foldit generate-structure --next
 
 # 2. Generate main pages
 foldit generate-page home -c -t
@@ -243,13 +415,40 @@ foldit generate-page blog -d slug -c -t
 foldit generate-api auth --auth --methods POST
 foldit generate-api posts --prisma --methods GET,POST,PUT,DELETE
 foldit generate-api user -d id --auth --prisma
+
+# 4. Generate services for API calls
+foldit generate-service user --with-types --with-auth --with-cache
+foldit generate-service posts --with-interceptors --with-retry
+
+# 5. Dockerize the application
+foldit dockerize --with-compose --production
+
+# 6. Add Kubernetes configuration
+foldit add-kube --with-ingress --with-configmap --replicas 3
+```
+
+### Production Deployment
+
+```bash
+# Generate production-ready Docker setup
+foldit dockerize --production --with-compose --node-version 20-alpine
+
+# Create Kubernetes manifests for production
+foldit add-kube \
+  --namespace production \
+  --replicas 3 \
+  --with-ingress \
+  --with-configmap \
+  --service-type LoadBalancer \
+  --image-name my-app \
+  --image-tag v1.0.0
 ```
 
 ### Blog Application
 
 ```bash
 # Generate blog structure
-foldit generate-structure --medium
+foldit generate-structure --next
 
 # Generate blog pages
 foldit generate-page blog -c -t
@@ -260,6 +459,10 @@ foldit generate-page admin -c -t
 foldit generate-api posts --prisma --methods GET,POST,PUT,DELETE
 foldit generate-api posts -d id --prisma --methods GET,PUT,DELETE
 foldit generate-api auth --auth --methods POST
+
+# Containerize and deploy
+foldit dockerize --with-compose
+foldit add-kube --with-ingress --replicas 2
 ```
 
 ## 🔧 Configuration
@@ -271,6 +474,34 @@ The tool automatically detects your project structure and creates files in the a
 - **Git-ready** with `.gitkeep` files for empty directories
 - **Testing setup** with Jest and React Testing Library
 - **Modern Next.js conventions** following App Router patterns
+- **Production-ready Docker** configurations with multi-stage builds
+- **Kubernetes manifests** with health checks and security best practices
+
+## 🐳 Docker Features
+
+- **Multi-stage builds** for optimized production images
+- **Development and production** configurations
+- **Health checks** and proper user permissions
+- **Docker Compose** for local development
+- **Comprehensive .dockerignore** for faster builds
+
+## 🔧 Service Features
+
+- **Axios-based services** with TypeScript support
+- **CRUD operations** with proper error handling
+- **Authentication integration** with token management
+- **Caching functionality** using sessionStorage
+- **Retry logic** with exponential backoff
+- **Request/response interceptors** for logging and auth
+- **TypeScript types** generation for type safety
+
+## ☸️ Kubernetes Features
+
+- **Deployment manifests** with resource limits and health checks
+- **Service configurations** with multiple types (ClusterIP, NodePort, LoadBalancer)
+- **Ingress setup** with SSL termination and routing rules
+- **ConfigMap support** for environment variables
+- **Security best practices** with non-root users and capability restrictions
 
 ## 🤝 Contributing
 
@@ -285,6 +516,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built for the Next.js community
 - Inspired by modern development practices
 - Designed for developer productivity
+- Enhanced with containerization and orchestration support
 
 ---
 
